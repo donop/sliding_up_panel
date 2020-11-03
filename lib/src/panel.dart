@@ -201,9 +201,9 @@ class SlidingUpPanel extends StatefulWidget {
     this.header,
     this.footer
   }) : assert(panel != null || panelBuilder != null),
-       assert(0 <= backdropOpacity && backdropOpacity <= 1.0),
-       assert (snapPoint == null || 0 < snapPoint && snapPoint < 1.0),
-       super(key: key);
+        assert(0 <= backdropOpacity && backdropOpacity <= 1.0),
+        assert (snapPoint == null || 0 < snapPoint && snapPoint < 1.0),
+        super(key: key);
 
   @override
   _SlidingUpPanelState createState() => _SlidingUpPanelState();
@@ -224,9 +224,9 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
     super.initState();
 
     _ac = new AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-      value: widget.defaultPanelState == PanelState.CLOSED ? 0.0 : 1.0 //set the default panel state (i.e. set initial value of _ac)
+        vsync: this,
+        duration: const Duration(milliseconds: 300),
+        value: widget.defaultPanelState == PanelState.CLOSED ? 0.0 : 1.0 //set the default panel state (i.e. set initial value of _ac)
     )..addListener((){
       if(widget.onPanelSlide != null) widget.onPanelSlide(_ac.value);
 
@@ -248,132 +248,141 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: widget.slideDirection == SlideDirection.UP ? Alignment.bottomCenter : Alignment.topCenter,
-      children: <Widget>[
+    return LayoutBuilder(
+      builder: (_, constraints)
+      {
+        double newHeight = min(MediaQuery.of(context).size.height, constraints.maxHeight);
+        double newWidth = min(MediaQuery.of(context).size.width, constraints.maxWidth);
+        print(newWidth);
+        print(newHeight);
+        Stack(
+          alignment: widget.slideDirection == SlideDirection.UP ? Alignment.bottomCenter : Alignment.topCenter,
+          children: <Widget>[
 
 
-        //make the back widget take up the entire back side
-        widget.body != null ? AnimatedBuilder(
-          animation: _ac,
-          builder: (context, child){
-            return Positioned(
-              top: widget.parallaxEnabled ? _getParallax() : 0.0,
-              child: child,
-            );
-          },
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: widget.body,
-          ),
-        ) : Container(),
+            //make the back widget take up the entire back side
+            widget.body != null ? AnimatedBuilder(
+              animation: _ac,
+              builder: (context, child){
+                return Positioned(
+                  top: widget.parallaxEnabled ? _getParallax() : 0.0,
+                  child: child,
+                );
+              },
+              child: Container(
+                height: newHeight,
+                width: newWidth,
+                child: widget.body,
+              ),
+            ) : Container(),
 
 
-        //the backdrop to overlay on the body
-        !widget.backdropEnabled ? Container() : GestureDetector(
-          onVerticalDragEnd: widget.backdropTapClosesPanel ? (DragEndDetails dets){
-            // only trigger a close if the drag is towards panel close position
-            if((widget.slideDirection == SlideDirection.UP ? 1 : -1) * dets.velocity.pixelsPerSecond.dy > 0)
-              _close();
-          } : null,
-          onTap: widget.backdropTapClosesPanel ? () => _close() : null,
-          child: AnimatedBuilder(
-            animation: _ac,
-            builder: (context, _) {
-              return Container(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
+            //the backdrop to overlay on the body
+            !widget.backdropEnabled ? Container() : GestureDetector(
+              onVerticalDragEnd: widget.backdropTapClosesPanel ? (DragEndDetails dets){
+                // only trigger a close if the drag is towards panel close position
+                if((widget.slideDirection == SlideDirection.UP ? 1 : -1) * dets.velocity.pixelsPerSecond.dy > 0)
+                  _close();
+              } : null,
+              onTap: widget.backdropTapClosesPanel ? () => _close() : null,
+              child: AnimatedBuilder(
+                  animation: _ac,
+                  builder: (context, _) {
+                    return Container(
+                      height: newHeight,
+                      width: newWidth,
 
-                //set color to null so that touch events pass through
-                //to the body when the panel is closed, otherwise,
-                //if a color exists, then touch events won't go through
-                color: _ac.value == 0.0 ? null : widget.backdropColor.withOpacity(widget.backdropOpacity * _ac.value),
-              );
-            }
-          ),
-        ),
+                      //set color to null so that touch events pass through
+                      //to the body when the panel is closed, otherwise,
+                      //if a color exists, then touch events won't go through
+                      color: _ac.value == 0.0 ? null : widget.backdropColor.withOpacity(widget.backdropOpacity * _ac.value),
+                    );
+                  }
+              ),
+            ),
 
 
-        //the actual sliding part
-        !_isPanelVisible ? Container() : _gestureHandler(
-          child: AnimatedBuilder(
-            animation: _ac,
-            builder: (context, child) {
-              return Container(
-                height: _ac.value * (widget.maxHeight - widget.minHeight) + widget.minHeight,
-                margin: widget.margin,
-                padding: widget.padding,
-                decoration: widget.renderPanelSheet ? BoxDecoration(
-                  border: widget.border,
-                  borderRadius: widget.borderRadius,
-                  boxShadow: widget.boxShadow,
-                  color: widget.color,
-                ) : null,
-                child: child,
-              );
-            },
-            child: Stack(
-              children: <Widget>[
+            //the actual sliding part
+            !_isPanelVisible ? Container() : _gestureHandler(
+              child: AnimatedBuilder(
+                animation: _ac,
+                builder: (context, child) {
+                  return Container(
+                    height: _ac.value * (widget.maxHeight - widget.minHeight) + widget.minHeight,
+                    margin: widget.margin,
+                    padding: widget.padding,
+                    decoration: widget.renderPanelSheet ? BoxDecoration(
+                      border: widget.border,
+                      borderRadius: widget.borderRadius,
+                      boxShadow: widget.boxShadow,
+                      color: widget.color,
+                    ) : null,
+                    child: child,
+                  );
+                },
+                child: Stack(
+                  children: <Widget>[
 
-                //open panel
-                Positioned(
-                  top: widget.slideDirection == SlideDirection.UP ? 0.0 : null,
-                  bottom: widget.slideDirection == SlideDirection.DOWN ? 0.0 : null,
-                  width:  MediaQuery.of(context).size.width -
+                    //open panel
+                    Positioned(
+                        top: widget.slideDirection == SlideDirection.UP ? 0.0 : null,
+                        bottom: widget.slideDirection == SlideDirection.DOWN ? 0.0 : null,
+                        width:  newWidth -
+                            (widget.margin != null ? widget.margin.horizontal : 0) -
+                            (widget.padding != null ? widget.padding.horizontal : 0),
+                        child: Container(
+                          height: widget.maxHeight,
+                          child: widget.panel != null
+                              ? widget.panel
+                              : widget.panelBuilder(_sc),
+                        )
+                    ),
+
+                    // header
+                    widget.header != null ? Positioned(
+                      top: widget.slideDirection == SlideDirection.UP ? 0.0 : null,
+                      bottom: widget.slideDirection == SlideDirection.DOWN ? 0.0 : null,
+                      child: widget.header,
+                    ) : Container(),
+
+                    // footer
+                    widget.footer != null ? Positioned(
+                        top: widget.slideDirection == SlideDirection.UP ? null : 0.0,
+                        bottom: widget.slideDirection == SlideDirection.DOWN ? null : 0.0,
+                        child: widget.footer
+                    ) : Container(),
+
+                    // collapsed panel
+                    Positioned(
+                      top: widget.slideDirection == SlideDirection.UP ? 0.0 : null,
+                      bottom: widget.slideDirection == SlideDirection.DOWN ? 0.0 : null,
+                      width:  newWidth -
                           (widget.margin != null ? widget.margin.horizontal : 0) -
                           (widget.padding != null ? widget.padding.horizontal : 0),
-                  child: Container(
-                    height: widget.maxHeight,
-                    child: widget.panel != null
-                            ? widget.panel
-                            : widget.panelBuilder(_sc),
-                  )
-                ),
+                      child: Container(
+                        height: widget.minHeight,
+                        child: widget.collapsed == null ? Container() : FadeTransition(
+                          opacity: Tween(begin: 1.0, end: 0.0).animate(_ac),
 
-                // header
-                widget.header != null ? Positioned(
-                  top: widget.slideDirection == SlideDirection.UP ? 0.0 : null,
-                  bottom: widget.slideDirection == SlideDirection.DOWN ? 0.0 : null,
-                  child: widget.header,
-                ) : Container(),
-
-                // footer
-                widget.footer != null ? Positioned(
-                  top: widget.slideDirection == SlideDirection.UP ? null : 0.0,
-                  bottom: widget.slideDirection == SlideDirection.DOWN ? null : 0.0,
-                  child: widget.footer
-                ) : Container(),
-
-                // collapsed panel
-                Positioned(
-                  top: widget.slideDirection == SlideDirection.UP ? 0.0 : null,
-                  bottom: widget.slideDirection == SlideDirection.DOWN ? 0.0 : null,
-                  width:  MediaQuery.of(context).size.width -
-                          (widget.margin != null ? widget.margin.horizontal : 0) -
-                          (widget.padding != null ? widget.padding.horizontal : 0),
-                  child: Container(
-                    height: widget.minHeight,
-                    child: widget.collapsed == null ? Container() : FadeTransition(
-                      opacity: Tween(begin: 1.0, end: 0.0).animate(_ac),
-
-                      // if the panel is open ignore pointers (touch events) on the collapsed
-                      // child so that way touch events go through to whatever is underneath
-                      child: IgnorePointer(
-                        ignoring: _isPanelOpen,
-                        child: widget.collapsed
+                          // if the panel is open ignore pointers (touch events) on the collapsed
+                          // child so that way touch events go through to whatever is underneath
+                          child: IgnorePointer(
+                              ignoring: _isPanelOpen,
+                              child: widget.collapsed
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+
+
+                  ],
                 ),
-
-
-              ],
+              ),
             ),
-          ),
-        ),
 
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -477,11 +486,11 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
         else
           _flingPanelToPosition(widget.snapPoint, visualVelocity);
 
-      // no snap point exists
+        // no snap point exists
       }else if(widget.panelSnapping){
         _ac.fling(velocity: visualVelocity);
 
-      // panel snapping disabled
+        // panel snapping disabled
       }else{
         _ac.animateTo(
           _ac.value + visualVelocity * 0.16,
@@ -509,14 +518,14 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
 
   void _flingPanelToPosition(double targetPos, double velocity){
     final Simulation simulation = SpringSimulation(
-      SpringDescription.withDampingRatio(
-        mass: 1.0,
-        stiffness: 500.0,
-        ratio: 1.0,
-      ),
-      _ac.value,
-      targetPos,
-      velocity
+        SpringDescription.withDampingRatio(
+          mass: 1.0,
+          stiffness: 500.0,
+          ratio: 1.0,
+        ),
+        _ac.value,
+        targetPos,
+        velocity
     );
 
     _ac.animateWith(simulation);
